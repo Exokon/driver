@@ -1,7 +1,52 @@
-// main.cpp : the application source code.
+// main.c : the application source code.
 #include "main.h"
 #include <ntddk.h>
 #include <wdf.h>
+
+EVT_WDF_DRIVER_DEVICE_ADD EvtWdfDriverDeviceAdd;
+
+// 1. the first driver-supplied routine that is called after a driver is loaded
+NTSTATUS DriverEntry(
+    _In_ PDRIVER_OBJECT  DriverObject,
+    _In_ PUNICODE_STRING RegistryPath
+)
+{
+    NTSTATUS status = STATUS_SUCCESS;
+    
+    WDF_DRIVER_CONFIG config;
+    WDF_DRIVER_CONFIG_INIT(
+        &config,
+        EvtWdfDriverDeviceAdd
+    );
+
+    // 2. enables the driver to use Windows Driver Framework interfaces
+    status = WdfDriverCreate(
+        DriverObject,
+        RegistryPath,
+        WDF_NO_OBJECT_ATTRIBUTES,
+        &config,
+        WDF_NO_HANDLE
+    )
+
+    return status;
+};
+
+// 3. performs device initialization operations when the Plug and Play (PnP) manager reports the existence of a device
+NTSTATUS EvtWdfDriverDeviceAdd
+(
+    _In_    WDFDRIVER       Driver, 
+    _Inout_ PWDFDEVICE_INIT DeviceInit
+)
+{
+    NTSTATUS status = STATUS_SUCCESS;
+
+    return status;
+}
+
+/*
+#include <ntddk.h>
+#include <wdf.h>
+
 DRIVER_INITIALIZE DriverEntry;
 EVT_WDF_DRIVER_DEVICE_ADD KmdfHelloWorldEvtDeviceAdd;
 
@@ -61,3 +106,4 @@ KmdfHelloWorldEvtDeviceAdd(
                              );
     return status;
 }
+*/
