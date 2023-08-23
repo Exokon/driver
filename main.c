@@ -3,6 +3,7 @@
 #include <ntddk.h>
 #include <wdf.h>
 
+
 EVT_WDF_DRIVER_DEVICE_ADD EvtWdfDriverDeviceAdd;
 
 // 1. the first driver-supplied routine that is called after a driver is loaded
@@ -26,21 +27,77 @@ NTSTATUS DriverEntry(
         WDF_NO_OBJECT_ATTRIBUTES,
         &config,
         WDF_NO_HANDLE
-    )
+    );
 
     return status;
 };
 
 // 3. performs device initialization operations when the Plug and Play (PnP) manager reports the existence of a device
-NTSTATUS EvtWdfDriverDeviceAdd
-(
+NTSTATUS EvtWdfDriverDeviceAdd(
     _In_    WDFDRIVER       Driver, 
     _Inout_ PWDFDEVICE_INIT DeviceInit
 )
 {
     NTSTATUS status = STATUS_SUCCESS;
 
+    UNREFERENCED_PARAMETER(Driver);
+
+    /* framework device object initialization methods
+    ...
+    */
+
+    // 4. identifies the calling driver as an upper-level or lower-level filter driver, for a specified device
+    WdfFdoInitSetFilter(
+        DeviceInit
+    );
+    
+    WDFDEVICE device;
+
+    // 5. creates a framework device object
+    status = WdfDeviceCreate(
+        &DeviceInit, 
+        WDF_NO_OBJECT_ATTRIBUTES,
+        &device
+    );
+
+    WDF_IO_QUEUE_CONFIG config;
+    config.DispatchType = WdfIoQueueDispatchSequential;
+    config.PowerManaged = WdfFalse;
+
+    WDFQUEUE queue;
+
+    // 6. creates and configures an I/O queue for a specified device
+    status = WdfIoQueueCreate(
+        device,
+        &config,
+        WDF_NO_OBJECT_ATTRIBUTES,
+        &queue
+    );
+
     return status;
+}
+
+EVT_WDF_IO_QUEUE_IO_DEFAULT EvtWdfIoQueueIoDefault;
+
+// 7. processes a specified I/O request
+void EvtWdfIoQueueIoDefault(
+    _In_ WDFQUEUE Queue,
+    _In_ WDFREQUEST Request
+)
+{
+    NTSTATUS status = STATUS_SUCCESS;
+
+    UNREFERENCED_PARAMETER(Queue);
+
+    // console
+    
+    //
+
+    // 8. completes a specified I/O request and supplies a completion status
+    WdfRequestComplete(
+        Request,
+        status
+    );
 }
 
 /*
